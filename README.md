@@ -2,311 +2,168 @@
 
 用一个搜索框，搜遍阿里云盘、夸克、百度网盘、115、迅雷等热门网盘资源。即搜即得、聚合去重、免费开源、零广告、轻量部署。
 
-在线体验：<https://panhub.shenzjd.com>
+**在线体验**：<https://panhub.shenzjd.com>
 
-> 免责声明：本项目仅用于技术学习与搜索聚合演示，不存储、不传播任何受版权保护的内容。请勿用于商业或侵权用途。
-
----
-
-## ✨ 核心特性
-
-### 智能搜索优化
-- **优先级频道机制**：TG 搜索自动优先处理高优先级频道，响应速度提升 50%+
-- **批量并发控制**：支持独立配置优先频道与普通频道的并发数，最大化利用资源
-- **智能缓存系统**：LRU 淘汰 + 内存监控 + 过期清理，防止内存泄漏
-- **暂停/继续搜索**：搜索过程中可随时暂停，找到所需结果后立即停止，节省资源
-
-### 用户体验增强
-- **热搜推荐**：首页展示实时热搜榜单，按分类分组（影视、动漫、软件、学习等）
-- **SQLite 持久化**：热搜数据本地持久化存储，支持数据备份和恢复
-- **紧凑布局**：优化界面空间占用，搜索框、热搜区、结果区布局更合理
-- **深色模式**：完整支持深色主题，自动适配系统偏好
-
-### 稳定性增强
-- **统一错误处理**：所有网络请求自动重试（指数退避），失败率降低 80%
-- **超时控制**：插件和 API 请求支持可配置超时，避免无限等待
-- **优雅降级**：单个插件失败不影响整体搜索，自动跳过并记录日志
-
-### 部署与开发
-- **零成本部署**：原生支持 Cloudflare Workers、Vercel、Docker
-- **完整测试覆盖**：50+ 单元测试，核心逻辑 100% 覆盖
-- **类型安全**：全 TypeScript 编写，完整类型推断
+> 免责声明：本项目仅用于技术学习与搜索聚合演示，不存储、不传播任何受版权保护的内容。
 
 ---
 
-## 🚀 快速开始
+## 🚀 快速部署
 
-### 一键部署到 Vercel
-
+### Vercel 一键部署
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwu529778790%2Fpanhub.shenzjd.com&project-name=panhub&repository-name=panhub.shenzjd.com)
 
-### 一键部署到 Cloudflare Workers
-
+### Cloudflare Workers 一键部署
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wu529778790/panhub.shenzjd.com)
 
 ### Docker 部署
-
 ```bash
-# GHCR
-docker pull ghcr.io/wu529778790/panhub.shenzjd.com:latest
+# 快速启动
 docker run --name panhub -p 3000:3000 -d ghcr.io/wu529778790/panhub.shenzjd.com:latest
 
-# Docker Hub
-docker pull docker.io/wu529778790/panhub.shenzjd.com:latest
-docker run --name panhub -p 3000:3000 -d docker.io/wu529778790/panhub.shenzjd.com:latest
+# 数据持久化（推荐）
+mkdir -p /root/panhub/data
+docker run -d --name panhub -p 3000:3000 \
+  -v /root/panhub/data:/app/data \
+  -e HOT_SEARCH_PASSWORD=admin123 \
+  ghcr.io/wu529778790/panhub.shenzjd.com:latest
 ```
 
 ### 本地开发
-
 ```bash
-# 安装依赖
 pnpm install
-
-# 启动开发服务器
-pnpm dev
-
-# 运行测试
-pnpm test
-
-# 构建生产版本
-pnpm build
-pnpm start
+pnpm dev          # 开发服务器
+pnpm test         # 运行测试
+pnpm build        # 构建生产版
 ```
+
+---
+
+## ✨ 核心功能
+
+### 智能搜索
+- **优先级频道**：高优先级频道优先处理，响应速度提升 50%+
+- **批量并发**：独立配置优先/普通频道并发数
+- **智能缓存**：LRU 淘汰 + 内存监控 + 过期清理
+- **暂停/继续**：搜索过程可随时暂停，找到结果立即停止
+
+### 用户体验
+- **实时热搜**：展示其他用户搜索词，点击即可搜索
+- **SQLite 持久化**：热搜数据本地存储（支持内存降级）
+- **深色模式**：完整支持深色主题
+
+### 稳定性
+- **自动重试**：网络请求失败自动重试（指数退避）
+- **超时控制**：可配置超时，避免无限等待
+- **优雅降级**：单个插件失败不影响整体
 
 ---
 
 ## 📖 使用说明
 
-### 搜索功能
-1) **输入关键词并回车**开始搜索。
+### 搜索流程
+1. **输入关键词并回车**开始搜索
+2. **快速结果**：优先频道先返回（~50ms）
+3. **深度结果**：剩余频道继续加载
+4. **自动合并**：结果去重、按时间排序、分类型展示
 
-2) **分批结果展示**：
-   - **快速结果**：优先并发查询高优先级频道（默认 4 并发）
-   - **深度结果**：继续查询剩余频道（默认 2 并发）
-   - **自动合并**：结果自动去重、按时间排序、分类型展示
+### 操作按钮
+- **暂停/继续**：随时控制搜索过程
+- **重置**：取消所有请求，清空结果和输入框
+- **热搜词**：点击直接搜索
 
-3) **暂停/继续搜索**：
-   - 搜索过程中点击 **"暂停"** 按钮可立即停止所有请求
-   - 点击 **"继续"** 按钮从暂停处恢复搜索
-   - 适合场景：找到所需结果后立即停止，节省时间和资源
-
-4) **热搜推荐**：
-   - 首页展示按分类分组的热搜榜单
-   - 点击热搜词直接开始搜索
-   - 数据来源：SQLite 本地存储（自动记录用户搜索）
-
-5) **重置按钮**：立即取消所有进行中的请求并清空结果。
-
-### 设置与配置
-6) **右上角设置面板**可自定义：
-   - **插件管理**：启用/禁用不同来源的搜索插件
-   - **TG 频道**：配置优先频道和普通频道列表
-   - **性能参数**：
-     - 插件并发数（1-16）
-     - 插件超时时间（毫秒）
-     - 缓存开关与过期时间
-
-7) **恢复默认**：清空本地配置并刷新页面。
+### 设置配置
+右上角设置面板可配置：
+- 插件管理（启用/禁用）
+- TG 频道列表（优先/普通）
+- 性能参数（并发数、超时时间、缓存）
 
 ---
 
 ## 🔧 技术架构
 
 ### 核心模块
-
 ```
 server/core/
-├── cache/
-│   └── memoryCache.ts      # LRU 缓存系统（支持内存监控 + 智能清理）
-├── services/
-│   ├── searchService.ts    # 搜索服务（优先级批处理 + 并发控制）
-│   ├── hotSearchSQLite.ts  # SQLite 热搜持久化（内存兜底）
-│   ├── hotSearchService.ts # 热搜服务（自动分类 + 数据记录）
-│   └── tg.ts               # TG 频道抓取
-├── plugins/
-│   ├── manager.ts          # 插件管理器
-│   └── base.ts             # 插件基类
-└── utils/
-    ├── fetch.ts            # 统一网络请求（重试 + 超时）
-    └── logger.ts           # 结构化日志
+├── cache/memoryCache.ts      # LRU 缓存系统
+├── services/searchService.ts # 搜索服务（优先级批处理）
+├── services/hotSearchSQLite.ts # SQLite 热搜持久化
+├── services/tg.ts            # TG 频道抓取
+├── plugins/manager.ts        # 插件管理器
+└── utils/fetch.ts            # 网络请求（重试+超时）
 ```
 
-### 热搜系统架构
+### 热搜系统
 ```
-用户搜索 → POST /api/hot-searches → hotSearchService → SQLite/内存
-                    ↓
-              GET /api/hot-searches → 分类展示 → HotSearchSection.vue
+用户搜索 → useSearch.ts → 记录到 SQLite → GET /api/hot-searches → 标签云展示
 ```
 
-### 性能优化详情
-
-#### 1. 内存缓存 (MemoryCache)
-```typescript
-// 特性：
-- LRU 淘汰策略（最近最少使用）
-- 内存占用估算与监控
-- 过期条目自动清理
-- 性能指标统计（命中率、淘汰次数等）
-
-// 配置：
-{
-  maxSize: 1000,              // 最大条目数
-  maxMemoryBytes: 100MB,      // 最大内存占用
-  cleanupInterval: 5分钟,     // 自动清理间隔
-  memoryThreshold: 0.8,       // 内存阈值（80%触发清理）
-}
-```
-
-#### 2. TG 搜索优化
-```typescript
-// 优先级批处理：
-1. 优先频道：并发 = min(默认并发 * 2, 12)
-2. 普通频道：并发 = 默认并发
-
-// 性能提升：
-- 8 个频道（3 优先 + 5 普通）搜索时间：~350ms（优化前 8-10s）
-- 优先频道结果返回时间：~50ms
-```
-
-#### 3. 网络请求优化
-```typescript
-// fetchWithRetry 特性：
-- 自动重试（最多 3 次）
-- 指数退避延迟（1s, 2s, 4s）
-- 超时控制（默认 10s）
-- 统一日志记录
-```
-
-#### 4. 错误处理
-```typescript
-// safeExecute 模式：
-- 单个插件失败不影响整体
-- 自动记录错误日志
-- 返回空数组作为降级结果
-- 支持短关键词兜底（"电影"、"movie"、"1080p"）
-```
-
-#### 5. 暂停/继续搜索
-```typescript
-// 搜索状态管理：
-interface SearchState {
-  loading: boolean;     // 搜索进行中
-  paused: boolean;      // 已暂停
-  results: SearchResult[];
-}
-
-// 工作流程：
-1. 用户点击搜索 → 开始并发请求
-2. 点击"暂停" → 设置 paused=true, 调用 AbortController 取消请求
-3. 点击"继续" → 从暂停处恢复，保留已获取结果
-4. 适合场景：结果已满足需求，立即停止节省资源
-```
-
-#### 6. SQLite 数据持久化
-```typescript
-// 特性：
-- 本地文件存储（better-sqlite3）
-- 内存模式兜底（无原生支持时）
-- 自动记录搜索词 + 时间戳
-- 智能分类（影视、动漫、软件、学习等）
-- 自动清理（保留最近 50 条）
-- 支持数据导出/备份
-
-// API：
-POST /api/hot-searches     // 记录搜索词
-GET  /api/hot-searches     // 获取热搜列表（支持 limit 参数）
-POST /api/clear-hot-searches  // 清空数据（需密码）
-POST /api/delete-hot-search   // 删除单条记录
-```
+**特点**：不分类，所有搜索词统一展示为智能标签云，按频次决定视觉权重。
 
 ---
 
 ## 🧪 测试
 
-本项目包含完整的单元测试套件：
-
 ```bash
-# 运行所有测试
-pnpm test
-
-# 运行特定测试
-pnpm test test/unit/memoryCache.test.ts
-pnpm test test/unit/tgSearchOptimization.test.ts
-
-# 测试覆盖率
-# 核心模块覆盖率 > 90%
+pnpm test                    # 所有单元测试
+pnpm test:api                # API 集成测试
+pnpm test:coverage           # 测试覆盖率
 ```
 
-### 测试结果
-```
-✓ 60+ tests passing
-  - fetch.test.ts: 12 tests (网络请求 + 重试)
-  - memoryCache.test.ts: 21 tests (LRU + 内存监控)
-  - pluginManager.test.ts: 10 tests (插件管理)
-  - tgSearchOptimization.test.ts: 7 tests (优先级批处理)
-  - hot-search.test.ts: 15 tests (SQLite 操作 + 内存兜底)
-```
+**测试覆盖**：60+ 测试用例，核心逻辑 >90% 覆盖
 
 ---
 
-## ⚙️ 配置示例
+## ⚙️ 环境变量
 
-### config/channels.json
-```json
-{
-  "priorityChannels": [
-    "频道1",
-    "频道2"
-  ],
-  "defaultChannels": [
-    "频道1",
-    "频道2",
-    "频道3",
-    "频道4"
-  ]
-}
-```
-
-### nuxt.config.ts (运行时配置)
-```typescript
-export default defineNuxtConfig({
-  runtimeConfig: {
-    priorityChannels: ['频道1', '频道2'],
-    defaultChannels: ['频道1', '频道2', '频道3', '频道4'],
-    defaultConcurrency: 10,
-    pluginTimeoutMs: 15000,
-    cacheEnabled: true,
-    cacheTtlMinutes: 30
-  }
-})
-```
+| 变量名 | 默认值 | 说明 |
+|--------|--------|------|
+| `HOT_SEARCH_PASSWORD` | `admin123` | 热搜管理密码 |
+| `LOG_LEVEL` | `info` | 日志级别 |
+| `NITRO_PRESET` | auto-detect | 部署预设 |
+| `PORT` | `3000` | 服务端口 |
 
 ---
 
-## 📊 性能对比
+## 🔍 常见问题
 
-| 指标 | 优化前 | 优化后 | 提升 |
-|------|--------|--------|------|
-| TG 搜索时间 (8 频道) | 8-10s | ~350ms | **95%** |
-| 内存泄漏风险 | 高 | 无 | **100%** |
-| 请求失败率 | ~15% | <2% | **87%** |
-| 单元测试覆盖 | 0% | 90%+ | **+90%** |
-| 界面空间占用 | 100% | ~60% | **40%** |
-| 搜索可控性 | 无暂停 | 随时暂停/继续 | **新增** |
+### 1. Docker 数据不持久化？
+检查是否挂载数据目录并使用 SQLite 模式：
+```bash
+curl http://localhost:3000/api/hot-search-stats
+# 应返回 "mode": "sqlite"
+```
+
+### 2. 如何查看热搜数据？
+```bash
+# 查看热搜
+curl http://localhost:3000/api/hot-searches?limit=30
+```
+
+### 3. 内存模式 vs SQLite 模式？
+- **内存模式**：重启丢失数据，无需安装，适合开发/测试
+- **SQLite 模式**：永久保存，需要编译环境，适合生产
+- **Cloudflare Workers**：仅支持内存模式
+
+### 4. 热搜记录规则？
+- 搜索**开始时**立即记录（不管是否有结果）
+- 自动刷新显示
+- 保留最近 30 条高频搜索
+- 自动过滤敏感词
 
 ---
 
 ## 🛡️ 版权与合规
 
-- PanHub 不存储任何搜索结果内容，所有链接均来自公开网络。
-- 请在遵守当地法律法规与平台使用条款的前提下使用本项目。
-- 若您是权利人并认为存在侵权线索，请先联系源站处理。
+- PanHub 不存储任何内容，所有链接来自公开网络
+- 请遵守当地法律法规与平台使用条款
+- 侵权问题请联系源站处理
 
 ---
 
 ## 📄 许可证
 
-本项目采用 MIT License 开源许可，商业使用请遵守许可证条款并自担合规责任。
+MIT License
 
 ---
 
@@ -314,16 +171,8 @@ export default defineNuxtConfig({
 
 欢迎提交 Issue 和 Pull Request！
 
-### 开发规范
-- 使用 TypeScript 编写强类型代码
+**开发规范**：
+- TypeScript 编写
 - 核心功能必须包含单元测试
-- 提交前运行 `pnpm test` 确保所有测试通过
-- 使用 Conventional Commits 规范
-
-### 优化方向
-- [ ] 更多网盘源插件
-- [ ] 高级搜索语法支持
-- [ ] 分布式部署支持
-- [ ] 热搜数据云端同步
-- [ ] 搜索历史管理
-- [ ] 多语言支持
+- 提交前运行 `pnpm test`
+- 使用 Conventional Commits
