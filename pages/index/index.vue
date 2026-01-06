@@ -103,19 +103,9 @@
       <span>{{ searchState.error }}</span>
     </section>
 
-    <!-- 搜索建议 -->
-    <section v-if="!searchState.searched && !searchState.loading" class="suggestions">
-      <div class="suggestions-card">
-        <h4>💡 搜索建议</h4>
-        <div class="suggestion-tags">
-          <span class="tag" @click="quickSearch('电影')">电影</span>
-          <span class="tag" @click="quickSearch('剧集')">剧集</span>
-          <span class="tag" @click="quickSearch('软件')">软件</span>
-          <span class="tag" @click="quickSearch('学习资料')">学习资料</span>
-          <span class="tag" @click="quickSearch('音乐')">音乐</span>
-          <span class="tag" @click="quickSearch('电子书')">电子书</span>
-        </div>
-      </div>
+    <!-- 热搜推荐 -->
+    <section v-if="!searchState.searched && !searchState.loading" class="hot-search-section">
+      <HotSearchTabs :on-search="quickSearch" />
     </section>
   </div>
 </template>
@@ -123,6 +113,7 @@
 <script setup lang="ts">
 import SearchBox from "./SearchBox.vue";
 import ResultGroup from "./ResultGroup.vue";
+import HotSearchTabs from "./HotSearchTabs.vue";
 import { PLATFORM_INFO } from "~/config/plugins";
 import type { MergedLinks } from "~/server/core/types/models";
 
@@ -563,51 +554,9 @@ function visibleSorted(items: any[]) {
   font-size: 18px;
 }
 
-/* 搜索建议 */
-.suggestions {
+/* 热搜推荐 */
+.hot-search-section {
   animation: fadeIn 0.6s ease;
-}
-
-.suggestions-card {
-  background: var(--bg-glass);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-md);
-}
-
-.suggestions-card h4 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.suggestion-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  padding: 8px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.tag:hover {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
-  border-color: transparent;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* 移动端优化 */
@@ -728,18 +677,8 @@ function visibleSorted(items: any[]) {
     border-color: rgba(239, 68, 68, 0.4);
   }
 
-  .suggestions-card {
-    background: rgba(15, 23, 42, 0.5);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .tag {
-    background: rgba(30, 41, 59, 0.5);
-    border-color: rgba(100, 116, 139, 0.3);
-  }
-
-  .tag:hover {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+  .hot-search-section {
+    /* HotSearchTabs 组件内部已支持深色模式 */
   }
 }
 
@@ -765,12 +704,11 @@ function visibleSorted(items: any[]) {
   .results-section,
   .empty-state,
   .error-alert,
-  .suggestions {
+  .hot-search-section {
     animation: none;
   }
 
   .filter-pill:hover,
-  .tag:hover,
   .sort-select:hover {
     transform: none;
   }

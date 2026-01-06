@@ -257,6 +257,20 @@ export function useSearch() {
     }
   }
 
+  // 记录搜索词到热搜
+  async function recordHotSearch(keyword: string): Promise<void> {
+    try {
+      await $fetch('/api/hot-searches', {
+        method: 'POST',
+        body: { term: keyword },
+      });
+      console.log('[useSearch] Recorded hot search:', keyword);
+    } catch (error) {
+      // 静默失败，不影响主搜索流程
+      console.debug('[useSearch] Failed to record hot search:', error);
+    }
+  }
+
   // 主搜索函数
   async function performSearch(options: SearchOptions): Promise<void> {
     const { keyword, settings } = options;
@@ -321,6 +335,11 @@ export function useSearch() {
       // 2) 深度搜索
       state.value.deepLoading = true;
       await performDeepSearch(options, mySeq);
+
+      // 3) 记录到热搜（异步，不阻塞搜索结果）
+      if (mySeq === searchSeq) {
+        recordHotSearch(keyword);
+      }
     } catch (error: any) {
       state.value.error = error?.data?.message || error?.message || "请求失败";
       console.error("[useSearch] Search failed:", error);
