@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
 interface Props {
   onSearch: (term: string) => void;
@@ -108,11 +108,6 @@ function getTagStyle(score: number) {
 function onSearchClick(term: string) {
   props.onSearch(term);
 }
-
-// 页面加载时获取数据
-onMounted(() => {
-  fetchHotSearches();
-});
 
 // 暴露刷新方法给父组件
 defineExpose({

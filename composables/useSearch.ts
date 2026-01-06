@@ -336,7 +336,8 @@ export function useSearch() {
     const start = performance.now();
 
     // 记录到热搜（在搜索开始时，不管有没有结果都记录）
-    recordHotSearch(keyword);
+    // 立即开始记录，不阻塞搜索流程
+    const recordPromise = recordHotSearch(keyword);
 
     try {
       // 1) 快速搜索
@@ -357,6 +358,12 @@ export function useSearch() {
     } catch (error: any) {
       state.value.error = error?.data?.message || error?.message || "请求失败";
     } finally {
+      // 等待热搜记录完成
+      try {
+        await recordPromise;
+      } catch (e) {
+        // 忽略热搜记录错误
+      }
       state.value.elapsedMs = Math.round(performance.now() - start);
       // 如果暂停了，保持 loading 状态，只取消 deepLoading
       if (!state.value.paused) {

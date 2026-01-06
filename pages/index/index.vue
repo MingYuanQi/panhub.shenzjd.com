@@ -109,15 +109,15 @@
       <span>{{ searchState.error }}</span>
     </section>
 
-    <!-- 热搜推荐 -->
-    <section v-if="!searchState.searched && !searchState.loading" class="hot-search-section">
+    <!-- 热搜推荐 - 始终显示 -->
+    <section class="hot-search-section">
       <HotSearchSection ref="hotSearchRef" :on-search="quickSearch" />
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import SearchBox from "./SearchBox.vue";
 import ResultGroup from "./ResultGroup.vue";
 import HotSearchSection from "./HotSearchSection.vue";
@@ -127,6 +127,9 @@ import type { MergedLinks } from "~/server/core/types/models";
 const config = useRuntimeConfig();
 const apiBase = (config.public?.apiBase as string) || "/api";
 const siteUrl = (config.public?.siteUrl as string) || "";
+
+// 热搜组件引用
+const hotSearchRef = ref<InstanceType<typeof HotSearchSection> | null>(null);
 
 // SEO 元数据
 useSeoMeta({
@@ -184,9 +187,6 @@ const filterPlatform = ref<string>("all");
 const initialVisible = 3;
 const expandedSet = ref<Set<string>>(new Set());
 
-// 热搜组件引用
-const hotSearchRef = ref<InstanceType<typeof HotSearchSection> | null>(null);
-
 // 使用新的搜索 composable
 const { state: searchState, performSearch, resetSearch, copyLink, pauseSearch, continueSearch } = useSearch();
 const { settings } = useSettings();
@@ -209,12 +209,8 @@ function getSearchOptions() {
 async function onSearch() {
   if (!kw.value || searchState.value.loading) return;
 
+  // 执行搜索（内部会记录热搜词）
   await performSearch(getSearchOptions());
-
-  // 搜索完成后刷新热搜数据
-  if (hotSearchRef.value) {
-    hotSearchRef.value.refresh();
-  }
 }
 
 // 快速搜索
@@ -229,10 +225,14 @@ async function handleContinueSearch() {
   await continueSearch(getSearchOptions());
 }
 
-// 完全重置 - 清空输入框、结果、状态
+// 完全重置 - 清空输入框、结果、状态，并刷新热搜数据
 async function fullReset() {
   kw.value = "";
   resetSearch();
+  // 重置时刷新热搜数据
+  if (hotSearchRef.value) {
+    await hotSearchRef.value.refresh();
+  }
 }
 
 // 平台信息

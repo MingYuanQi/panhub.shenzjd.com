@@ -210,7 +210,7 @@ export class HotSearchSQLiteService {
         }
 
         // 删除操作 (DELETE FROM hot_searches WHERE id NOT IN) - 通用删除
-        if (sql.includes('DELETE FROM hot_searches')) {
+        if (sql.includes('DELETE FROM hot_searches') && sql.includes('WHERE id NOT IN')) {
           return {
             run: (limit: number) => {
               const entries = Array.from(memoryStore.entries())
